@@ -1,22 +1,40 @@
-# PomoTune - Focus with Music & Productivity
 
-PomoTune is a web application designed to help you stay productive using the Pomodoro technique, a to-do list, and a music playlist. Boost your focus and workflow with PomoTune!
+# **PomoTune - Focus with Music & Productivity**  
 
-## Features
+A web app combining the **Pomodoro technique, to-do lists, and music** to enhance focus and productivity.  
 
-- **Pomodoro Timer**: Manage your work and break sessions with a customizable timer.
-- **To-Do List**: Keep track of your tasks and mark them as completed.
-- **Music Player**: Play YouTube videos and playlists to stay focused.
-- **Playlist Categories**: Browse and select from various curated playlists.
-- **Music Visualizer**: Enjoy a visual representation of your music.
-- **Responsive Design**: Works seamlessly on both desktop and mobile devices.
+## **Features**  
+- 📅 **Pomodoro Timer** – Customizable work/break sessions  
+- ✅ **To-Do List** – Track and complete tasks  
+- 🎵 **Music Player** – Play YouTube playlists  
+- 🎼 **Playlist Categories** – Curated focus music  
+- 🎇 **Music Visualizer** – Audio-reactive visuals  
+- 📱 **Responsive UI** – Works on all devices  
 
-## Installation
-
-1. Clone the repository:
+## **Installation**  
+1. Clone the repo:  
    ```sh
    git clone https://github.com/yourusername/pomotune.git
    cd pomotune
-
-now go to google api section=https://developers.google.com/youtube/v3
+   ```  
+2. Get a **YouTube API Key** from [Google API Console](https://developers.google.com/youtube/v3)  
+3. Create a **.env** file and add:  
+   ```sh
    VITE_YOUTUBE_API_KEY=YourYouTubeAPIKey
+   ```  
+4. Install dependencies & start the app:  
+   ```sh
+   npm install
+   npm run dev
+   ```  
+
+## **Dependencies**  
+- **State Management** – [Zustand](https://github.com/pmndrs/zustand)  
+- **UI Icons** – [Lucide React](https://lucide.dev/)  
+- **YouTube Integration** – [React YouTube](https://github.com/tjallingt/react-youtube)  
+- **Notifications** – [React Hot Toast](https://react-hot-toast.com/)  
+- **Confetti Effects** – [Canvas Confetti](https://github.com/catdad/canvas-confetti)  
+
+🚀 **Stay productive with PomoTune!**  
+
+---

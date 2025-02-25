@@ -4,11 +4,10 @@
 A web app combining the **Pomodoro technique, to-do lists, and music** to enhance focus and productivity.  
 
 ## **Features**  
-- 📅 **Pomodoro Timer** – Customizable work/break sessions  
-- ✅ **To-Do List** – Track and complete tasks  
-- 🎵 **Music Player** – Play YouTube playlists  
-- 🎼 **Playlist Categories** – Curated focus music  
-- 🎇 **Music Visualizer** – Audio-reactive visuals  
+- 📅 **Pomodoro Timer** – Customizable work and you get total hours you work in your local storage no worry of privay of today and pomodoro
+- ✅ **To-Do List** – Track and complete tasks 
+- 🎵 **Music Player** – Play YouTube playlists and also youtube music playlists
+- 🎼 **Playlist Categories** – customs playlist according to your mood
 - 📱 **Responsive UI** – Works on all devices  
 
 ## **Installation**  

@@ -94,8 +94,6 @@ export const MusicPlayer: React.FC = () => {
               disablekb: 1,
               fs: 0,
               modestbranding: 1,
-              playsinline: 1,
-              enablejsapi: 1,
             },
           }}
           onReady={handleReady}

@@ -3,7 +3,11 @@ import YouTube from 'react-youtube';
 import { Play, Pause, SkipBack, SkipForward, Volume2, Video, VideoOff, Shuffle, Repeat } from 'lucide-react';
 import { useStore } from '../store/useStore';
 
-const VideoPlayer: React.FC = () => {
+interface VideoPlayerProps {
+  showCategories: boolean;
+}
+
+const VideoPlayer: React.FC<VideoPlayerProps> = ({ showCategories }) => {
   const playerRef = useRef<any>(null);
   const {
     playlist,
@@ -83,7 +87,7 @@ const VideoPlayer: React.FC = () => {
 
   if (!currentVideo) {
     return (
-      <div className="flex flex-col items-center justify-center h-[225px] text-sm text-gray-400 bg-[#181818] rounded-lg">
+      <div className={`flex flex-col items-center justify-center text-sm text-gray-400 bg-[#181818] rounded-lg ${showCategories ? 'h-[100px]' : 'h-[225px]'}`}>
         <p className="mb-2">No Music loaded</p>
         <p className="text-xs text-gray-500">Select a playlist or paste a YouTube URL above</p>
       </div>
@@ -93,17 +97,15 @@ const VideoPlayer: React.FC = () => {
   return (
     <div className="space-y-4">
       <div className={`relative w-full aspect-video bg-black rounded-lg overflow-hidden shadow-lg ${audioOnly ? 'hidden' : ''}`}>
-       <YouTube
+        <YouTube
           videoId={currentVideo.id}
           opts={{
             width: '100%',
             height: '100%',
             playerVars: {
-              autoplay: 0,
+              autoplay: 1,
               modestbranding: 1,
               rel: 0,
-              playsinline: 1,
-              enablejsapi: 1,
             },
           }}
           onReady={handleReady}

@@ -1,4 +1,4 @@
-import React, { Suspense, useState } from 'react';
+import React, { Suspense, useState, useEffect } from 'react';
 import { PomodoroTimer } from './components/PomodoroTimer';
 import { PlaylistCategories } from './components/PlaylistCategories';
 import { Footer } from './components/Footer';
@@ -9,8 +9,6 @@ import { FocusGoalModal } from './components/FocusGoalModal';
 import { BreakActivities } from './components/BreakActivities';
 import { BreakPlaylist } from './components/BreakPlaylist';
 import { Music } from 'lucide-react';
-import { GoogleAuth } from './components/GoogleAuth';
-import { PrivatePlaylists } from './components/PrivatePlaylists';
 
 const VideoPlayer = React.lazy(() => import('./components/VideoPlayer'));
 const PlaylistSidebar = React.lazy(() => import('./components/PlaylistSidebar'));
@@ -62,20 +60,21 @@ function App() {
   const [url, setUrl] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const { setPlaylist, currentSession, breakPlaylist, isLoggedIn } = useStore();
+  const { playlist, setPlaylist, currentSession, breakPlaylist, isLoggedIn } = useStore();
   const [isInitialLoading, setIsInitialLoading] = useState(true);
-  const [showCategories, setShowCategories] = useState(true);
+  const [showCategories, setShowCategories] = useState(playlist.videos.length === 0);
+  const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [isBreakPlaylistModalOpen, setIsBreakPlaylistModalOpen] = useState(false);
   const [breakPlaylistName, setBreakPlaylistName] = useState<string | null>(null);
 
-  React.useEffect(() => {
+  useEffect(() => {
     const timer = setTimeout(() => {
       setIsInitialLoading(false);
     }, 1000);
     return () => clearTimeout(timer);
   }, []);
   
-  React.useEffect(() => {
+  useEffect(() => {
     if (breakPlaylist.name) {
       setBreakPlaylistName(breakPlaylist.name);
     }
@@ -115,10 +114,18 @@ function App() {
     }
   }, []);
 
+  const handleToggleCategories = () => {
+    if (playlist.videos.length > 0) {
+      setIsCategoryModalOpen(!isCategoryModalOpen);
+    } else {
+      setShowCategories(!showCategories);
+    }
+  };
+
   if (isInitialLoading) {
     return (
-      <div className="min-h-screen bg-[#121212]">
-        <main className="max-w-7xl mx-auto p-4 sm:p-6">
+      <div className="min-h-screen bg-[#121212] flex flex-col">
+        <main className="flex-grow max-w-7xl mx-auto p-4 sm:p-6 w-full">
           <div className="grid lg:grid-cols-[55%_45%] gap-6 lg:gap-8">
             <div className="space-y-6 lg:space-y-8">
               <PomodoroShimmer />
@@ -145,7 +152,7 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-[#121212]">
+    <div className="min-h-screen bg-[#121212] flex flex-col">
       <FocusGoalModal />
       {isBreakPlaylistModalOpen && <BreakPlaylist onClose={(name) => {
         setIsBreakPlaylistModalOpen(false);
@@ -153,6 +160,12 @@ function App() {
           setBreakPlaylistName(name);
         }
       }} />}
+      {isCategoryModalOpen && (
+        <PlaylistCategories 
+          title="Browse Categories"
+          onClose={() => setIsCategoryModalOpen(false)} 
+        />
+      )}
       {error && (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
           <div className="p-4 bg-red-500/10 border border-red-500/20 text-red-500 rounded-xl">
@@ -160,11 +173,10 @@ function App() {
           </div>
         </div>
       )}
-      <header className="max-w-7xl mx-auto p-4 sm:p-6 flex justify-between items-center">
+      <header className="max-w-7xl mx-auto p-4 sm:p-6 flex justify-between items-center w-full">
         <h1 className="text-2xl font-bold text-white">FocusDJ</h1>
-        <GoogleAuth />
       </header>
-      <main className="max-w-7xl mx-auto p-4 sm:p-6">
+      <main className="flex-grow max-w-7xl mx-auto p-4 sm:p-6 w-full">
         <div className="grid lg:grid-cols-[55%_45%] gap-6 lg:gap-8">
           <div className="space-y-6 lg:space-y-8">
             <ErrorBoundary>
@@ -195,9 +207,9 @@ function App() {
                   />
                   <button
                     type="button"
-                    onClick={() => setShowCategories(!showCategories)}
+                    onClick={handleToggleCategories}
                     className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                      showCategories
+                      showCategories || isCategoryModalOpen
                         ? 'bg-[#1DB954] hover:bg-[#1ed760] text-black'
                         : 'bg-[#383838] hover:bg-[#404040] text-white'
                     }`}
@@ -217,12 +229,14 @@ function App() {
                   </button>
                 </div>
 
-                {showCategories && !url && !isLoggedIn && (
+                {showCategories && playlist.videos.length === 0 && (
                   <div className="bg-[#1d1d1d] rounded-xl p-4 animate-fade-in">
-                    <PlaylistCategories onSelect={() => setShowCategories(false)} />
+                    <PlaylistCategories 
+                      title="Browse Categories"
+                      onClose={() => setShowCategories(false)} 
+                    />
                   </div>
                 )}
-                {isLoggedIn && <PrivatePlaylists />}
               </div>
             </div>
             
@@ -245,7 +259,7 @@ function App() {
                     </>
                   ) : (
                     <>
-                      <VideoPlayer />
+                      <VideoPlayer showCategories={showCategories} />
                       <div className="mt-6">
                         <PlaylistSidebar />
                       </div>
@@ -255,6 +269,9 @@ function App() {
               </Suspense>
             </ErrorBoundary>
           </div>
+        </div>
+        <div className="text-center text-xs text-gray-500 mt-8">
+          <p>For the best experience, please keep this tab active. Autoplay may not work in the background.</p>
         </div>
       </main>
       <Footer />

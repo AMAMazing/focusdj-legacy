@@ -147,7 +147,7 @@ export const useStore = create<StoreState>()(
 
       startTimer: () => {
         const state = get();
-        if (state.isRunning) return;
+        if (state.isRunning && state.timer) return;
 
         if (state.timer) {
           clearInterval(state.timer);
@@ -186,6 +186,7 @@ export const useStore = create<StoreState>()(
                 timeRemaining: nextDuration,
                 isRunning: false,
               });
+              get().startTimer();
 
             } else { // Break session has ended
               set((state) => ({
@@ -194,7 +195,6 @@ export const useStore = create<StoreState>()(
                 isRunning: false,
                 playlist: state.workPlaylist.videos.length > 0 ? state.workPlaylist : state.playlist,
               }));
-              get().startTimer();
             }
             return;
           }
@@ -272,11 +272,15 @@ export const useStore = create<StoreState>()(
       },
 
       clearAllData: () => {
-        const { timer } = get();
+        const { timer, pomodoroSettings } = get();
         if (timer) {
           clearInterval(timer);
         }
-        set(DEFAULT_STATE);
+        set({
+          ...DEFAULT_STATE,
+          pomodoroSettings,
+          breakActivities: defaultBreakActivities
+        });
       },
       
       setFocusGoal: (goal) => {

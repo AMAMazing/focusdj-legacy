@@ -2,13 +2,14 @@ import React from 'react';
 import { newPlaylists } from '../data/playlists';
 import { useStore } from '../store/useStore';
 import { fetchPlaylistVideos } from '../utils/youtube';
-import { Loader2 } from 'lucide-react';
+import { Loader2, X } from 'lucide-react';
 
 interface PlaylistCategoriesProps {
-  onSelect?: () => void;
+  onClose: () => void;
+  title: string;
 }
 
-export const PlaylistCategories: React.FC<PlaylistCategoriesProps> = ({ onSelect }) => {
+export const PlaylistCategories: React.FC<PlaylistCategoriesProps> = ({ onClose, title }) => {
   const { setPlaylist } = useStore();
   const [loading, setLoading] = React.useState<string | null>(null);
   const [error, setError] = React.useState<string | null>(null);
@@ -28,7 +29,7 @@ export const PlaylistCategories: React.FC<PlaylistCategoriesProps> = ({ onSelect
         shuffle: true,
         repeat: false,
       });
-      onSelect?.();
+      onClose();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load playlist');
     } finally {
@@ -37,31 +38,40 @@ export const PlaylistCategories: React.FC<PlaylistCategoriesProps> = ({ onSelect
   };
 
   return (
-    <div className="max-h-[400px] overflow-y-auto custom-scrollbar">
-      <div className="grid grid-cols-2 gap-3">
-        {newPlaylists.map((playlist) => (
-          <button
-            key={playlist.id}
-            onClick={() => handlePlaylistSelect(playlist.url, playlist.id)}
-            disabled={!!loading}
-            className="bg-[#282828] rounded-lg p-4 text-left hover:bg-[#323232] transition-all disabled:opacity-50 disabled:cursor-not-allowed group"
-          >
-            <div className="flex items-start gap-3">
-              <span className="text-3xl flex-shrink-0">{playlist.icon}</span>
-              <div className="flex-1 min-w-0">
-                <h3 className="font-semibold text-white text-sm mb-1">{playlist.name}</h3>
-                <p className="text-xs text-gray-400 leading-relaxed">{playlist.description}</p>
-              </div>
-              {loading === playlist.id && (
-                <Loader2 size={18} className="text-[#1DB954] animate-spin flex-shrink-0" />
-              )}
-            </div>
-          </button>
-        ))}
+    <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 animate-fade-in">
+      <div className="bg-[#282828] rounded-xl p-6 w-full max-w-lg m-4 relative">
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors"
+        >
+          <X size={24} />
+        </button>
+        <h2 className="text-xl font-bold text-white mb-4 text-center">{title}</h2>
+        <div className="max-h-[60vh] overflow-y-auto custom-scrollbar p-1">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {newPlaylists.map((playlist) => (
+              <button
+                key={playlist.id}
+                onClick={() => handlePlaylistSelect(playlist.url, playlist.id)}
+                disabled={!!loading}
+                className="bg-[#383838] rounded-lg p-3 text-left hover:bg-[#424242] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-3"
+              >
+                <span className="text-3xl">{playlist.icon}</span>
+                <div className="flex-1">
+                  <h3 className="font-semibold text-white truncate">{playlist.name}</h3>
+                  <p className="text-xs text-gray-400">{playlist.description}</p>
+                </div>
+                {loading === playlist.id && (
+                  <Loader2 size={20} className="text-[#1DB954] animate-spin" />
+                )}
+              </button>
+            ))}
+          </div>
+          {error && (
+            <p className="mt-4 px-4 py-2 text-sm text-red-400 bg-red-400/10 rounded-lg">{error}</p>
+          )}
+        </div>
       </div>
-      {error && (
-        <p className="mt-4 px-3 py-2 text-xs text-red-400 bg-red-400/10 rounded-lg">{error}</p>
-      )}
     </div>
   );
 };

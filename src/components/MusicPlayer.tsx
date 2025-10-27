@@ -1,6 +1,6 @@
 import React, { useRef, useEffect } from 'react';
 import YouTube from 'react-youtube';
-import { Play, Pause, SkipBack, SkipForward, Volume2 } from 'lucide-react';
+import { SkipBack, SkipForward, Volume2 } from 'lucide-react';
 import { useStore } from '../store/useStore';
 
 export const MusicPlayer: React.FC = () => {
@@ -23,29 +23,25 @@ export const MusicPlayer: React.FC = () => {
     }
   };
 
-  const handlePlay = () => {
-    if (playerRef.current) {
-      playerRef.current.playVideo();
+  const handleStateChange = (event: any) => {
+    if (event.data === 1) { // Playing
       setIsPlaying(true);
-    }
-  };
-
-  const handlePause = () => {
-    if (playerRef.current) {
-      playerRef.current.pauseVideo();
+    } else if (event.data === 2) { // Paused
       setIsPlaying(false);
     }
   };
 
   const handlePrevious = () => {
-    if (currentIndex > 0) {
-      setCurrentVideo(currentIndex - 1);
+    const newIndex = currentIndex - 1;
+    if (newIndex >= 0) {
+      setCurrentVideo(newIndex);
     }
   };
 
   const handleNext = () => {
-    if (currentIndex < videos.length - 1) {
-      setCurrentVideo(currentIndex + 1);
+    const newIndex = currentIndex + 1;
+    if (newIndex < videos.length) {
+      setCurrentVideo(newIndex);
     }
   };
 
@@ -56,6 +52,25 @@ export const MusicPlayer: React.FC = () => {
     }
     setVolume(newVolume);
   };
+
+  useEffect(() => {
+    if (playerRef.current && currentVideo) {
+      playerRef.current.loadVideoById(currentVideo.id);
+      if (isPlaying) {
+        playerRef.current.playVideo();
+      }
+    }
+  }, [currentIndex, currentVideo]);
+
+  useEffect(() => {
+    if (playerRef.current && playerRef.current.getPlayerState) {
+      if (isPlaying && playerRef.current.getPlayerState() !== 1) {
+        playerRef.current.playVideo();
+      } else if (!isPlaying && playerRef.current.getPlayerState() === 1) {
+        playerRef.current.pauseVideo();
+      }
+    }
+  }, [isPlaying]);
 
   if (!currentVideo) {
     return (
@@ -74,14 +89,17 @@ export const MusicPlayer: React.FC = () => {
             height: '0',
             width: '0',
             playerVars: {
-              autoplay: 1,
+              autoplay: isPlaying ? 1 : 0,
               controls: 0,
               disablekb: 1,
               fs: 0,
               modestbranding: 1,
+              playsinline: 1,
+              enablejsapi: 1,
             },
           }}
           onReady={handleReady}
+          onStateChange={handleStateChange}
           onEnd={handleNext}
         />
       </div>
@@ -102,13 +120,6 @@ export const MusicPlayer: React.FC = () => {
           className="p-3 rounded-full bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-white disabled:opacity-50 transition-all"
         >
           <SkipBack size={20} />
-        </button>
-
-        <button
-          onClick={isPlaying ? handlePause : handlePlay}
-          className="p-4 rounded-full bg-emerald-500 hover:bg-emerald-600 text-white shadow-lg hover:shadow-xl transition-all"
-        >
-          {isPlaying ? <Pause size={24} /> : <Play size={24} />}
         </button>
 
         <button

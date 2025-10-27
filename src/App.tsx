@@ -1,15 +1,33 @@
-import React, { Suspense } from 'react';
-import { Brain, ListTodo, Music2 } from 'lucide-react';
+import React, { Suspense, useState } from 'react';
 import { PomodoroTimer } from './components/PomodoroTimer';
-import { TodoList } from './components/TodoList';
 import { PlaylistCategories } from './components/PlaylistCategories';
 import { Footer } from './components/Footer';
 import { useStore } from './store/useStore';
 import { fetchPlaylistVideos } from './utils/youtube';
-import { PomodoroShimmer, TodoShimmer, VideoPlayerShimmer, PlaylistShimmer } from './components/Shimmer';
+import { PomodoroShimmer, VideoPlayerShimmer, PlaylistShimmer } from './components/Shimmer';
+import { FocusGoalModal } from './components/FocusGoalModal';
+import { BreakActivities } from './components/BreakActivities';
+import { BreakPlaylist } from './components/BreakPlaylist';
+import { Music } from 'lucide-react';
+import { GoogleAuth } from './components/GoogleAuth';
+import { PrivatePlaylists } from './components/PrivatePlaylists';
 
 const VideoPlayer = React.lazy(() => import('./components/VideoPlayer'));
 const PlaylistSidebar = React.lazy(() => import('./components/PlaylistSidebar'));
+
+const ApiKeyMissingError = () => (
+  <div className="min-h-screen bg-[#121212] flex items-center justify-center p-4">
+    <div className="bg-red-500/10 border border-red-500/20 text-red-400 rounded-xl p-8 max-w-2xl text-center">
+      <h1 className="text-2xl font-bold mb-4">Configuration Error</h1>
+      <p className="mb-4">The YouTube API key is missing. The application cannot fetch videos without it.</p>
+      <p>Please create a file named <code className="bg-gray-700 p-1 rounded">.env</code> in the root of the project and add the following line:</p>
+      <pre className="bg-[#282828] p-4 rounded-lg mt-4 text-left">
+        <code>VITE_YOUTUBE_API_KEY=YourYouTubeAPIKeyHere</code>
+      </pre>
+      <p className="mt-4 text-sm text-gray-400">Replace `YourYouTubeAPIKeyHere` with your actual key from the Google API Console. After adding the key, please restart the development server.</p>
+    </div>
+  </div>
+);
 
 class ErrorBoundary extends React.Component<
   { children: React.ReactNode },
@@ -37,12 +55,18 @@ class ErrorBoundary extends React.Component<
 }
 
 function App() {
-  const [url, setUrl] = React.useState('');
-  const [loading, setLoading] = React.useState(false);
-  const [error, setError] = React.useState('');
-  const { setPlaylist, playlist } = useStore();
-  const [isInitialLoading, setIsInitialLoading] = React.useState(true);
-  const [showCategories, setShowCategories] = React.useState(true);
+  if (!import.meta.env.VITE_YOUTUBE_API_KEY) {
+    return <ApiKeyMissingError />;
+  }
+
+  const [url, setUrl] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const { setPlaylist, currentSession, breakPlaylist, isLoggedIn } = useStore();
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
+  const [showCategories, setShowCategories] = useState(true);
+  const [isBreakPlaylistModalOpen, setIsBreakPlaylistModalOpen] = useState(false);
+  const [breakPlaylistName, setBreakPlaylistName] = useState<string | null>(null);
 
   React.useEffect(() => {
     const timer = setTimeout(() => {
@@ -50,6 +74,12 @@ function App() {
     }, 1000);
     return () => clearTimeout(timer);
   }, []);
+  
+  React.useEffect(() => {
+    if (breakPlaylist.name) {
+      setBreakPlaylistName(breakPlaylist.name);
+    }
+  }, [breakPlaylist.name]);
 
   const handleSubmit = React.useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
@@ -67,6 +97,8 @@ function App() {
         isPlaying: false,
         volume: 70,
         audioOnly: false,
+        shuffle: false,
+        repeat: false,
       });
       setUrl('');
     } catch (err) {
@@ -90,7 +122,6 @@ function App() {
           <div className="grid lg:grid-cols-[55%_45%] gap-6 lg:gap-8">
             <div className="space-y-6 lg:space-y-8">
               <PomodoroShimmer />
-              <TodoShimmer />
             </div>
             <div className="bg-[#282828] rounded-xl overflow-hidden">
               <div className="p-6 border-b border-[#383838]">
@@ -115,6 +146,13 @@ function App() {
 
   return (
     <div className="min-h-screen bg-[#121212]">
+      <FocusGoalModal />
+      {isBreakPlaylistModalOpen && <BreakPlaylist onClose={(name) => {
+        setIsBreakPlaylistModalOpen(false);
+        if (name) {
+          setBreakPlaylistName(name);
+        }
+      }} />}
       {error && (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
           <div className="p-4 bg-red-500/10 border border-red-500/20 text-red-500 rounded-xl">
@@ -122,7 +160,10 @@ function App() {
           </div>
         </div>
       )}
-
+      <header className="max-w-7xl mx-auto p-4 sm:p-6 flex justify-between items-center">
+        <h1 className="text-2xl font-bold text-white">FocusDJ</h1>
+        <GoogleAuth />
+      </header>
       <main className="max-w-7xl mx-auto p-4 sm:p-6">
         <div className="grid lg:grid-cols-[55%_45%] gap-6 lg:gap-8">
           <div className="space-y-6 lg:space-y-8">
@@ -131,11 +172,13 @@ function App() {
                 <PomodoroTimer />
               </Suspense>
             </ErrorBoundary>
-            <ErrorBoundary>
-              <Suspense fallback={<TodoShimmer />}>
-                <TodoList />
-              </Suspense>
-            </ErrorBoundary>
+            {currentSession === 'break' && (
+              <ErrorBoundary>
+                <Suspense fallback={<div>Loading...</div>}>
+                  <BreakActivities />
+                </Suspense>
+              </ErrorBoundary>
+            )}
           </div>
           
           <div className="bg-[#282828] rounded-xl overflow-hidden">
@@ -163,11 +206,23 @@ function App() {
                   </button>
                 </form>
                 
-                {showCategories && !url && (
+                <div className="flex justify-between items-center">
+                  {breakPlaylistName && <p className="text-xs text-gray-400">Break Playlist: {breakPlaylistName}</p>}
+                  <button
+                    onClick={() => setIsBreakPlaylistModalOpen(true)}
+                    className="flex items-center gap-2 text-xs text-gray-400 hover:text-[#1DB954] transition-colors ml-auto"
+                  >
+                    <Music size={14} />
+                    Set Break Playlist
+                  </button>
+                </div>
+
+                {showCategories && !url && !isLoggedIn && (
                   <div className="bg-[#1d1d1d] rounded-xl p-4 animate-fade-in">
                     <PlaylistCategories onSelect={() => setShowCategories(false)} />
                   </div>
                 )}
+                {isLoggedIn && <PrivatePlaylists />}
               </div>
             </div>
             

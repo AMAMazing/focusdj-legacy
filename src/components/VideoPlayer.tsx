@@ -1,4 +1,4 @@
-import React, { useRef, useCallback, memo } from 'react';
+import React, { useRef, useCallback, memo, useEffect } from 'react';
 import YouTube from 'react-youtube';
 import { Play, Pause, SkipBack, SkipForward, Volume2, Video, VideoOff, Shuffle, Repeat } from 'lucide-react';
 import { useStore } from '../store/useStore';
@@ -18,6 +18,16 @@ const VideoPlayer: React.FC = () => {
   const { videos, currentIndex, isPlaying, volume, audioOnly, shuffle, repeat } = playlist;
   const currentVideo = videos[currentIndex];
 
+  useEffect(() => {
+    if (playerRef.current) {
+      if (isPlaying) {
+        playerRef.current.playVideo();
+      } else {
+        playerRef.current.pauseVideo();
+      }
+    }
+  }, [isPlaying]);
+
   const handleReady = useCallback((event: any) => {
     playerRef.current = event.target;
     event.target.setVolume(volume);
@@ -27,17 +37,11 @@ const VideoPlayer: React.FC = () => {
   }, [volume, isPlaying]);
 
   const handlePlay = useCallback(() => {
-    if (playerRef.current) {
-      playerRef.current.playVideo();
-      setIsPlaying(true);
-    }
+    setIsPlaying(true);
   }, [setIsPlaying]);
 
   const handlePause = useCallback(() => {
-    if (playerRef.current) {
-      playerRef.current.pauseVideo();
-      setIsPlaying(false);
-    }
+    setIsPlaying(false);
   }, [setIsPlaying]);
 
   const handlePrevious = useCallback(() => {
@@ -49,24 +53,21 @@ const VideoPlayer: React.FC = () => {
   const handleNext = useCallback(() => {
     if (currentIndex < videos.length - 1) {
       setCurrentVideo(currentIndex + 1);
+    } else {
+      setIsPlaying(false);
     }
-  }, [currentIndex, videos.length, setCurrentVideo]);
+  }, [currentIndex, videos.length, setCurrentVideo, setIsPlaying]);
 
   const handleVideoEnd = useCallback(() => {
     if (repeat) {
-      // If repeat is on, replay the current song
       if (playerRef.current) {
         playerRef.current.seekTo(0);
         playerRef.current.playVideo();
       }
-    } else if (currentIndex < videos.length - 1) {
-      // If not repeating, go to next song if available
-      setCurrentVideo(currentIndex + 1);
     } else {
-      // If at the end and not repeating, stop playing
-      setIsPlaying(false);
+      handleNext();
     }
-  }, [currentIndex, videos.length, repeat, setCurrentVideo, setIsPlaying]);
+  }, [repeat, handleNext]);
 
   const handleVolumeChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const newVolume = parseInt(e.target.value);
@@ -91,22 +92,24 @@ const VideoPlayer: React.FC = () => {
 
   return (
     <div className="space-y-4">
-      <div className={`relative w-full aspect-video bg-black rounded-lg overflow-hidden shadow-lg ${
-        audioOnly ? 'hidden' : ''
-      }`}>
-        <YouTube
+      <div className={`relative w-full aspect-video bg-black rounded-lg overflow-hidden shadow-lg ${audioOnly ? 'hidden' : ''}`}>
+       <YouTube
           videoId={currentVideo.id}
           opts={{
             width: '100%',
             height: '100%',
             playerVars: {
-              autoplay: 1,
+              autoplay: 0,
               modestbranding: 1,
               rel: 0,
+              playsinline: 1,
+              enablejsapi: 1,
             },
           }}
           onReady={handleReady}
           onEnd={handleVideoEnd}
+          onPlay={handlePlay}
+          onPause={handlePause}
           className="w-full h-full"
           loading="lazy"
         />
@@ -154,8 +157,8 @@ const VideoPlayer: React.FC = () => {
           <button
             onClick={toggleAudioOnly}
             className={`p-2 rounded-lg ${
-              audioOnly 
-                ? 'bg-[#1DB954] text-black hover:bg-[#1ed760]' 
+              audioOnly
+                ? 'bg-[#1DB954] text-black hover:bg-[#1ed760]'
                 : 'bg-[#282828] text-gray-300 hover:bg-[#383838]'
             } transition-all`}
             title={audioOnly ? "Show video" : "Audio only"}

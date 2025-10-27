@@ -1,4 +1,3 @@
-
 # **PomoTune - Focus with Music & Productivity**  
 
 A web app combining the **Pomodoro technique, to-do lists, and music** to enhance focus and productivity.  
@@ -35,5 +34,3 @@ A web app combining the **Pomodoro technique, to-do lists, and music** to enhanc
 - **Confetti Effects** – [Canvas Confetti](https://github.com/catdad/canvas-confetti)  
 
 🚀 **Stay productive with PomoTune!**  
-
----

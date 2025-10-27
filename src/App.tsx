@@ -208,13 +208,9 @@ function App() {
                   <button
                     type="button"
                     onClick={handleToggleCategories}
-                    className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                      showCategories || isCategoryModalOpen
-                        ? 'bg-[#1DB954] hover:bg-[#1ed760] text-black'
-                        : 'bg-[#383838] hover:bg-[#404040] text-white'
-                    }`}
+                    className="px-4 py-2 rounded-full text-sm font-medium transition-all bg-[#383838] hover:bg-[#404040] text-white"
                   >
-                    {showCategories ? 'Hide Categories' : 'Browse Categories'}
+                    Browse Categories
                   </button>
                 </form>
                 
